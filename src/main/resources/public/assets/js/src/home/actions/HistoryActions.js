@@ -27,7 +27,7 @@ const setSession = function (session) {
     session,
   };
 };
-
+/*
 const setDataSynced = function () {
   return {
     type: types.HISTORY_SET_DATA_SYNCED
@@ -39,7 +39,7 @@ const setDataUnsynced = function () {
     type: types.HISTORY_SET_DATA_UNSYNCED
   };
 };
-
+*/
 const HistoryActions = {
   
   linkToHistory: function(options) {
@@ -59,10 +59,10 @@ const HistoryActions = {
         dispatch(HistoryActions.resetActiveSession()); 
       }
       
-      if (data && data.length>0) { 
-        dispatch(setSessions(data));
-        dispatch(setDataSynced());
-        }
+      //if (data && data.length>0) { 
+      //dispatch(setSessions(data));
+      // dispatch(setDataSynced());
+      //  }
  
       dispatch(push('/history'));
     };
@@ -99,7 +99,7 @@ const HistoryActions = {
         time
       });
       if (query) { 
-        dispatch(setDataUnsynced());
+        //dispatch(setDataUnsynced());
         dispatch(HistoryActions.query());
       }
     };
@@ -119,37 +119,44 @@ const HistoryActions = {
   },
   query: function () {
     return function(dispatch, getState) {
-      if (getState().section.history.activeDeviceType === 'AMPHIRO') {
+      const { activeDeviceType, activeDevice, timeFilter, time, comparison } = getState().section.history;
+      //AMPHIRO
+      if (activeDeviceType === 'AMPHIRO') {
         
-        if (getState().section.history.activeDevice.length === 0) {
+        if (activeDevice.length === 0) {
           dispatch(setSessions([]));
-          dispatch(setDataSynced());
+          //dispatch(setDataSynced());
           return;
         }
 
-        dispatch(QueryActions.queryDeviceSessions(getState().section.history.activeDevice, {type: 'SLIDING', length: lastNFilterToLength(getState().section.history.timeFilter)}))
+        dispatch(QueryActions.queryDeviceSessions(activeDevice, 
+                                {
+                                  type: 'SLIDING', 
+                                  length: lastNFilterToLength(timeFilter)
+                                }))
           .then(sessions => dispatch(setSessions(sessions)))
-          .then(() => dispatch(setDataSynced()))
+          //.then(() => dispatch(setDataSynced()))
           .catch(error => { 
             console.error('Caught error in history device query:', error); 
             dispatch(setSessions([]));
-            dispatch(setDataSynced());
+            //dispatch(setDataSynced());
           });
       }
-      else if (getState().section.history.activeDeviceType === 'METER') {
-        dispatch(QueryActions.fetchMeterHistory(getState().section.history.activeDevice, getState().section.history.time))
+      //METER
+      else if (activeDeviceType === 'METER') {
+        dispatch(QueryActions.fetchMeterHistory(activeDevice, time))
           .then(sessions => dispatch(setSessions(sessions)))
-          .then(() => dispatch(setDataSynced()))
+          //.then(() => dispatch(setDataSynced()))
           .catch(error => { 
             console.error('Caught error in history meter query:', error); 
             dispatch(setSessions([]));
-            dispatch(setDataSynced());
+            //dispatch(setDataSynced());
           });
       }
 
 
-        if (getState().section.history.comparison === 'last') {
-          dispatch(QueryActions.queryDeviceOrMeter(getState().section.history.activeDevice, getState().section.history.activeDeviceType, getPreviousPeriod(convertGranularityToPeriod(getState().section.history.time.granularity), getState().section.history.time.startDate)))
+        if (comparison === 'last') {
+          dispatch(QueryActions.queryDeviceOrMeter(activeDevice, activeDeviceType, getPreviousPeriod(convertGranularityToPeriod(time.granularity), time.startDate)))
           .then(sessions => dispatch(setComparisonSessions(sessions)))
           .catch(error => { 
             dispatch(setComparisonSessions([]));
@@ -178,7 +185,7 @@ const HistoryActions = {
       });
       
       if (query) { 
-        dispatch(setDataUnsynced());
+        //dispatch(setDataUnsynced());
         dispatch(HistoryActions.query());
       }
     };
@@ -204,7 +211,7 @@ const HistoryActions = {
       }
       
       if (query) { 
-        dispatch(setDataUnsynced());
+        //dispatch(setDataUnsynced());
         dispatch(HistoryActions.query());
       }
     };
@@ -217,7 +224,7 @@ const HistoryActions = {
       });
       
       if (query) { 
-        dispatch(setDataUnsynced());
+        //dispatch(setDataUnsynced());
         dispatch(HistoryActions.query());
       }
     };

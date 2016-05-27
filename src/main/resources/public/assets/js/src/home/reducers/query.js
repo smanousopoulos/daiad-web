@@ -6,10 +6,11 @@ var query = function (state, action) {
     state = {
       isLoading: false,
       success: null,
-      errors: null
+      errors: null,
+      cache: {}
     };
   }
-   
+     
   switch (action.type) {
     case types.QUERY_REQUEST_START:
       return Object.assign({}, state, {
@@ -33,7 +34,32 @@ var query = function (state, action) {
           });
         }
         break;
-      
+
+    case types.QUERY_SET_CACHE: {
+      return Object.assign({}, state, {
+        cache: action.cache
+      });
+    }
+
+    case types.QUERY_SAVE_TO_CACHE: {
+      let newCache = Object.assign({}, state.cache);
+      newCache[action.key] = {
+        data: action.data,
+        counter: 1
+      };
+      return Object.assign({}, state, {
+        cache:  newCache
+      });
+    }
+
+    case types.QUERY_CACHE_ITEM_REQUESTED: {
+      let newCache = Object.assign({}, state.cache);
+      newCache[action.key] = Object.assign({}, newCache[action.key], {counter: newCache[action.key].counter+1});
+      return Object.assign({}, state, {
+        cache: newCache
+      });
+    }
+
     default:
       return state;
   }

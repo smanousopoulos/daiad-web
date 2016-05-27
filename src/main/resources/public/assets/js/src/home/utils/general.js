@@ -1,3 +1,4 @@
+
 //http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
 const validateEmail = function(email) {
      const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -112,9 +113,22 @@ const getEnergyClass = function(energy) {
   return scale;
 };
 
+const getCacheKey = function(deviceType, timeOrLength) {
+  if (deviceType === 'AMPHIRO') {
+    return 'AMPHIRO,'+timeOrLength;
+  }
+  else if (deviceType === 'METER') {
+    return 'METER,'+timeOrLength.startDate+'-'+timeOrLength.endDate;
+  }
+  else {
+    throw new Error(`deviceType ${deviceType} not supported`);
+  }
+};
+
 module.exports = {
   validateEmail,
   flattenMessages,
   getFriendlyDuration,
-  getEnergyClass
+  getEnergyClass,
+  getCacheKey,
 };

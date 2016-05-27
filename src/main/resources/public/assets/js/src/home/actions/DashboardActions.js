@@ -138,9 +138,8 @@ const DashboardActions = {
           console.error('Caught error in infobox data fetch:', error); 
           dispatch(DashboardActions.setInfoboxData(id, {data: [], error:'Oops, sth went wrong..replace with something friendly'})); });
       }
-      //total or efficiency
+      //total or efficiency or comparison or breakdown
       else {
-
         //fetch previous period data for comparison 
         if (deviceType === 'METER') {
           let prevTime = getPreviousPeriodSoFar(period);
@@ -172,6 +171,19 @@ const DashboardActions = {
   },
   fetchAllInfoboxesData: function() {
     return function(dispatch, getState) {
+      //sequential execution to take advantage of cache
+      //TODO: this implementation is slower for the moment
+      /*
+      getState().section.dashboard.infobox
+      .map(infobox => DashboardActions.fetchInfoboxData(infobox))
+      .reduce((prev, curr) => {
+        return prev.then((() => {
+          //console.log('tick', prev, curr);
+          return dispatch(curr);
+        }));
+        
+        }, Promise.resolve());
+        */
       getState().section.dashboard.infobox.map(function (infobox) {
         const { type } = infobox;
         if (type === 'total' || type === 'last' || type === 'efficiency' || type === 'comparison' || type === 'breakdown')

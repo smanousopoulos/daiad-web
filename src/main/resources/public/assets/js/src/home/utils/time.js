@@ -58,7 +58,7 @@ const getPreviousPeriod = function(period, timestamp=moment().valueOf()) {
 const getPreviousPeriodSoFar = function(period, timestamp=moment().valueOf()) {
   return {
     startDate: moment(timestamp).startOf(period).subtract(1, period).valueOf(),
-    endDate: moment(timestamp).subtract(1, period).valueOf(),
+    endDate: moment(timestamp).endOf(getLowerGranularityPeriod(period)).subtract(1, period).valueOf(),
     granularity: convertPeriodToGranularity(period)
   };
 };

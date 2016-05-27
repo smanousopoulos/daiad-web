@@ -20,6 +20,9 @@ module.exports = keyMirror({
 
   QUERY_REQUEST_START: null,
   QUERY_REQUEST_END: null,
+  QUERY_SAVE_TO_CACHE: null,
+  QUERY_CACHE_ITEM_REQUESTED: null,
+  QUERY_SET_CACHE: null,
   
   HISTORY_SET_COMPARISON: null,
   HISTORY_SET_TIME: null,
