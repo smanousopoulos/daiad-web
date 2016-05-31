@@ -261,6 +261,10 @@ const getSessionsIdOffset = function(sessions) {
   return sessions[0] ? sessions[0].id : null;
 };
 
+const filterDataByDeviceKeys = function(data, deviceKeys) {
+  return data.filter(x => deviceKeys.findIndex(k => k === x.deviceKey)>-1);
+};
+
 module.exports = {
   getSessionById,
   getSessionByIndex,
@@ -288,5 +292,6 @@ module.exports = {
   lastNFilterToLength,
   getMetricMu,
   sortSessions,
-  getSessionsIdOffset
+  getSessionsIdOffset,
+  filterDataByDeviceKeys
 };

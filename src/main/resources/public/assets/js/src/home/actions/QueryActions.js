@@ -6,7 +6,7 @@ const { CACHE_SIZE } = require('../constants/HomeConstants');
 var deviceAPI = require('../api/device');
 var meterAPI = require('../api/meter');
 
-var { reduceSessions, getLastSession, getSessionIndexById, getDeviceTypeByKey, updateOrAppendToSession } = require('../utils/device');
+var { reduceSessions, getLastSession, getSessionIndexById, getDeviceTypeByKey, updateOrAppendToSession, getDeviceKeysByType, filterDataByDeviceKeys } = require('../utils/device');
 var { getCacheKey } = require('../utils/general');
 
 
@@ -52,12 +52,14 @@ const QueryActions = {
       if (getState().query.cache[getCacheKey('AMPHIRO', options.length)]) {
         console.log('found in cache!');
         dispatch(QueryActions.cacheItemRequested('AMPHIRO', options.length));
-        return new Promise(resolve => resolve(getState().query.cache[getCacheKey('AMPHIRO', options.length)].data));
+        //return new Promise(resolve => resolve(getState().query.cache[getCacheKey('AMPHIRO', options.length)].data.filter(x => deviceKeys.findIndex(k => k===x.deviceKey)>-1)));
+        return new Promise(resolve => resolve(filterDataByDeviceKeys(getState().query.cache[getCacheKey('AMPHIRO', options.length)].data, deviceKeys)));
       }
 
       dispatch(requestedQuery());
 
-      const data = Object.assign({}, options, {deviceKey:deviceKeys}, {csrf: getState().user.csrf});
+      //fetch all items to save in cache
+      const data = Object.assign({}, options, {deviceKey:getDeviceKeysByType(getState().user.profile.devices, 'AMPHIRO')}, {csrf: getState().user.csrf});
 
       return deviceAPI.querySessions(data)
       .then(response => {
@@ -66,8 +68,10 @@ const QueryActions = {
         if (!response.success) {
           throw new Error (response.errors);
         }
-          dispatch(QueryActions.saveToCache('AMPHIRO', options.length, response.devices));
-          return response.devices;
+        dispatch(QueryActions.saveToCache('AMPHIRO', options.length, response.devices));
+
+        //return only the items requested
+        return filterDataByDeviceKeys(response.devices, deviceKeys);
         })
         .catch((error) => {
           dispatch(receivedQuery(false, error));
@@ -125,11 +129,13 @@ const QueryActions = {
       if (getState().query.cache[getCacheKey('METER', time)]) {
         console.log('found in cache!');
         dispatch(QueryActions.cacheItemRequested('METER', time));
-        return new Promise(resolve => resolve(getState().query.cache[getCacheKey('METER', time)].data));
+        return new Promise(resolve => resolve(filterDataByDeviceKeys(getState().query.cache[getCacheKey('METER', time)].data, deviceKeys)));
       }
       dispatch(requestedQuery());
-      
-      const data = Object.assign({}, time, {deviceKey:deviceKeys}, {csrf: getState().user.csrf});
+
+      //fetch all meters requested in order to save to cache 
+      const data = Object.assign({}, time, {deviceKey:getDeviceKeysByType(getState().user.profile.devices, 'METER')}, {csrf: getState().user.csrf});
+
       return meterAPI.getHistory(data)
         .then((response) => {
           dispatch(receivedQuery(response.success, response.errors, response.session));
@@ -137,7 +143,9 @@ const QueryActions = {
             throw new Error (response.errors);
           }
           dispatch(QueryActions.saveToCache('METER', time, response.series));
-          return response.series;
+
+          //return only the meters requested  
+          return filterDataByDeviceKeys(response.series, deviceKeys);
         })
         .catch((error) => {
           dispatch(receivedQuery(false, error));
