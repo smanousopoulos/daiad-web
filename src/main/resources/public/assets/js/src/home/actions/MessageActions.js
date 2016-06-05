@@ -4,17 +4,22 @@ const { MESSAGE_TYPES } = require('../constants/HomeConstants');
 var types = require('../constants/ActionTypes');
 var messageAPI = require('../api/message');
 
-const { getTypeByCategory } = require('../utils/messages');
+var { linkToHistory:link } = require('./HistoryActions');
+var QueryActions = require('./QueryActions');
+
+//const { transformInfoboxData } = require('../containers/DashboardData');
+//const { getTypeByCategory } = require('../utils/messages');
+const msgUtil = require('../utils/messages');
 
 const requestedMessages = function() {
   return {
-    type: types.MESSAGE_REQUEST_START,
+    type: types.MESSAGES_REQUEST_START,
   };
 };
 
 const receivedMessages = function(success, errors) {
   return {
-    type: types.MESSAGE_REQUEST_END,
+    type: types.MESSAGES_REQUEST_END,
     success,
     errors
   };
@@ -49,7 +54,7 @@ const MessageActions = {
   },
   fetchAll: function() {
     return function(dispatch, getState) {
-      dispatch(MessageActions.fetch(MESSAGE_TYPES.map(x => Object.assign({}, x, {ascending: false}))))
+      dispatch(MessageActions.fetch(MESSAGE_TYPES.map(x => Object.assign({}, x, {ascending: false})))) 
       .then(response => dispatch(MessageActions.setMessages(response)));
       //.then(response => dispatch(MessageActions.appendMessages('tips', [{acknowledgedOn: null, title: 'LALALA', description: 'lololololo', id: 19, type: 'RECOMMENDATION_STATIC'}])));
     };
@@ -90,7 +95,7 @@ const MessageActions = {
       }
       dispatch(requestedMessageAck());
 
-      const type = getTypeByCategory(category);
+      const type = msgUtil.getTypeByCategory(category);
       const data = Object.assign({}, {messages: [{id, type, timestamp}]}, {csrf: getState().user.csrf});
 
       return messageAPI.acknowledge(data)
@@ -118,6 +123,14 @@ const MessageActions = {
       category,
       timestamp
     };
+  },
+  updateMessage: function(id, category, data) {
+    return {
+      type: types.MESSAGE_UPDATE,
+      id,
+      category,
+      data
+    };
   }, 
   setMessages: function(response) {
     let messages = {};
@@ -129,7 +142,7 @@ const MessageActions = {
 
      console.log('setting messages', response, messages);
     return {
-      type: types.MESSAGE_SET,
+      type: types.MESSAGES_SET,
       messages
     };
   },
@@ -138,7 +151,7 @@ const MessageActions = {
     if (!Array.isArray(messages)) throw new Error('Messages in append messages action must be of type array: ', messages);
     if (!(type === 'alerts' || type === 'announcements' || type === 'recommendations' || type === 'tips')) throw new Error('Append messages failed because type is not supported: ', type);
     return {
-      type: types.MESSAGE_APPEND,
+      type: types.MESSAGES_APPEND,
       category: type,
       messages
     };
@@ -147,24 +160,37 @@ const MessageActions = {
     if (!(tab === 'alerts' || tab === 'announcements' || tab === 'recommendations' || tab === 'tips')) throw new Error ('Tab needs to be one of alerts, announcements, recommendations, tips. Provided: ', tab);
 
     return {
-      type: types.MESSAGE_SET_ACTIVE_TAB,
+      type: types.MESSAGES_SET_ACTIVE_TAB,
       tab
     };
   },
   setActiveMessageId: function(id) {
     return function(dispatch, getState) {
       if (!id) throw new Error('Not sufficient data provided for selecting message, missing id');
+      
+      const category = getState().messages.activeTab;
 
       dispatch({
-        type: types.MESSAGE_SET_ACTIVE,
+        type: types.MESSAGES_SET_ACTIVE,
         id
       });
-
-      const category = getState().messages.activeTab;
-      
       dispatch(MessageActions.acknowledge(id, category, new Date().getTime()));
+      
+      const message = getState().messages[category].find(x => x.id === id);
 
+      if (message.type === 'ALERT') {
+        const mediaJSON = msgUtil.getAlertMedia(message);
+        if (!mediaJSON) return;
+        dispatch(QueryActions.fetchInfoboxData(mediaJSON))
+        .then(res => {
+          console.log('got data', res);
+          //const transformed = transformInfoboxData(Object.assign({}, mediaJSON, {data: res.data, index: res.index, device: res.device, showerId: res.id, time: res.timestamp}), getState().user.profile.devices, link, x => x);
+          //console.log('message data!!', transformed);
+          dispatch(MessageActions.updateMessage(id, category, res));
 
+        });
+      }
+    
     };
   }
 

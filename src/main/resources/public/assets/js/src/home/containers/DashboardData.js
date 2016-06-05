@@ -9,7 +9,7 @@ var { STATIC_RECOMMENDATIONS, STATBOX_DISPLAYS, DEV_METRICS, METER_METRICS, DEV_
 
 var Dashboard = require('../components/sections/Dashboard');
 
-var HistoryActions = require('../actions/HistoryActions');
+var { linkToHistory:link } = require('../actions/HistoryActions');
 var DashboardActions = require('../actions/DashboardActions');
 
 var timeUtil = require('../utils/time');
@@ -25,18 +25,13 @@ function mapStateToProps(state, ownProps) {
     firstname: state.user.profile.firstname,
     devices: state.user.profile.devices,
     layout: state.section.dashboard.layout,
-    //mode: state.section.dashboard.mode,
     tempInfoboxData: state.section.dashboard.tempInfoboxData,
     infoboxes: state.section.dashboard.infobox,
   };
 }
 
 function mapDispatchToProps(dispatch) {
-  return Object.assign({}, 
-                       bindActionCreators(DashboardActions, dispatch),
-                       {link: options => dispatch(HistoryActions.linkToHistory(options))}
-                      ); 
-
+  return bindActionCreators(Object.assign({}, DashboardActions, {link}), dispatch);
 }
 
 function mergeProps(stateProps, dispatchProps, ownProps) {
@@ -45,14 +40,17 @@ function mergeProps(stateProps, dispatchProps, ownProps) {
                dispatchProps,
                stateProps,
                {
-                 infoboxData: transformInfoboxData(stateProps.infoboxes, stateProps.devices, dispatchProps.link, ownProps.intl),
+                 //: stateProps.infoboxes.map(infobox => {
+                   //const lala = transformInfoboxData(infobox, stateProps.devices, dispatchProps.link, ownProps.intl);
+                   //console.log('transformed!', lala);
+                   //return lala;
+                 //})
                });
 }
 
 
-function transformInfoboxData (infoboxes, devices, link, intl) {
+function transformInfoboxData (infobox, devices, link, intl) {
 
-  return infoboxes.map(infobox => {
     const { id, title, type, period, index, deviceType, subtype, data, previous, metric, showerId } = infobox;
 
     const meterPeriods = METER_PERIODS.filter(x => x.id !== 'custom');
@@ -63,11 +61,11 @@ function transformInfoboxData (infoboxes, devices, link, intl) {
 
     const showers = getShowersCount(devices, data);
     
-    let chartFormatter = intl => (x) => intl.formatTime(x, { hour:'numeric', minute:'numeric'});
+    //let chartFormatter = intl => (x) => intl.formatTime(x, { hour:'numeric', minute:'numeric'});
     let chartType = 'line';
     let chartXAxis = 'category';
     let chartCategories = deviceType === 'METER' ? 
-      getChartMeterCategories(period, intl) : 
+      getChartMeterCategories(period) : 
         getChartAmphiroCategories(period, getSessionsIdOffset(data[0] ? data[0].sessions : []));
         
         
@@ -84,9 +82,12 @@ function transformInfoboxData (infoboxes, devices, link, intl) {
       chartCategories = null;
 
       const last = data.find(d=>d.deviceKey===device);
+      console.log('last = ', last);
       const lastShowerMeasurements = getDataMeasurements(devices, last, index);
+      console.log('last measu', lastShowerMeasurements);
       
       reduced = lastShowerMeasurements.map(s=>s[metric]).reduce((p, c)=>p+c, 0);
+      console.log('reduced', reduced);
       highlight = reduced;
       mu = getMetricMu(metric);
       //highlight = `${reduced} ${mu}`;
@@ -215,7 +216,7 @@ function transformInfoboxData (infoboxes, devices, link, intl) {
                          device,
                          highlight,
                          chartData,
-                         chartFormatter,
+                         //chartFormatter,
                          chartType,
                          chartCategories,
                          chartColors,
@@ -226,9 +227,11 @@ function transformInfoboxData (infoboxes, devices, link, intl) {
                          comparePercentage,
                          mu,
                        });
-     });
 }
 
 var DashboardData = connect(mapStateToProps, mapDispatchToProps, mergeProps)(Dashboard);
 DashboardData = injectIntl(DashboardData);
+
 module.exports = DashboardData;
+//exports.DashboardData = DashboardData;
+//exports.transformInfoboxData = transformInfoboxData;

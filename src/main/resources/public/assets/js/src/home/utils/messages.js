@@ -1,3 +1,4 @@
+const timeUtil = require('./time');
 
 //TODO: type label already present in messages
 //remove extra maps
@@ -17,7 +18,36 @@ const getTypeByCategory = function(category) {
   else { throw new Error('category not supported: ', category); }
 };
 
+const getAlertMedia = function(message) {
+  if (message.alert === 'WATER_LEAK') {
+    return {
+      type: 'forecast',
+      display: 'chart',
+      //time: timeUtil.thisYear(),
+      period: 'year',
+      deviceType: 'METER',
+      metric: 'difference',
+      data: []
+    };
+  }
+  else if (message.alert === 'REDUCED_WATER_USE') {
+    return {
+      type: 'total',
+      display: 'chart',
+      //time: timeUtil.last24Hours(),
+      period: 'year',
+      deviceType: 'METER',
+      metric: 'difference',
+      data: []
+    };
+  }
+  else {
+    return null;
+  }
+};
+
 module.exports = {
   combineMessages,
-  getTypeByCategory
+  getTypeByCategory,
+  getAlertMedia
 };

@@ -4,7 +4,7 @@ var IndexRoute = require('react-router').IndexRoute;
 var Redirect = require('react-router').Redirect;
 
 var HomeApp = require('../containers/HomeApp');
-var Dashboard = require('../components/sections/Dashboard');
+//var Dashboard = require('../components/sections/Dashboard');
 var DashboardData = require('../containers/DashboardData');
 var History = require('../components/sections/History');
 var HistoryData = require('../containers/HistoryData');

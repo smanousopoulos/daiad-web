@@ -39,7 +39,10 @@ function SayHello (props) {
 
 function InfoBox (props) {
   const { mode, infobox, updateInfobox, removeInfobox, chartFormatter, intl } = props;
-  const { id, error, period, type, display, linkToHistory, periods, displays, time } = infobox;
+  let { id, error, period, type, display, linkToHistory, periods, displays, time } = infobox;
+  console.log('infobox', infobox, periods);
+  if (!displays) displays = [];
+  if (!periods) periods = [];
   
   const _t = intl.formatMessage;
   return (
@@ -152,9 +155,10 @@ function TipBox (props) {
 }
 
 function ChartBox (props) {
+  console.log('props chartbox', props);
   const { intl, history, infobox } = props;
   const { title, type, subtype, improved, data, metric, measurements, period, device, deviceDetails, chartData, chartFormatter, chartType, chartCategories, chartColors, chartXAxis, highlight, time, index, mu, invertAxis } = infobox;
-  console.log('chart data', chartData, chartType, infobox);
+  if (!chartData) return <span/>;
   return (
     <div>
       <div >
@@ -198,7 +202,6 @@ function ChartBox (props) {
                   xAxis={chartXAxis}
                   xAxisData={chartCategories}
                   colors={chartColors}
-                  formatter={chartFormatter(intl)}
                   data={chartData}
                 /> :
               <Chart
@@ -215,7 +218,6 @@ function ChartBox (props) {
                 xAxis={chartXAxis}
                 xAxisData={chartCategories}
                 colors={chartColors}
-                formatter={chartFormatter(intl)}
                 data={chartData}
               />))
 
@@ -238,7 +240,7 @@ function ChartBox (props) {
 }
 
 function InfoPanel (props) {
-  const { mode, layout, infoboxData, updateLayout, switchMode,  updateInfobox, removeInfobox, chartFormatter, intl, periods, displays } = props;
+  const { mode, layout, infoboxes, updateLayout, switchMode,  updateInfobox, removeInfobox, chartFormatter, intl, periods, displays } = props;
 
   return (
     <div>
@@ -262,10 +264,10 @@ function InfoPanel (props) {
         }}
        >
        {
-         infoboxData.map(function(infobox) {
+         infoboxes.map(function(infobox) {
            return (
              <div key={infobox.id}>
-               <InfoBox {...{mode, periods, displays, chartFormatter, infobox, updateInfobox, removeInfobox, intl}} /> 
+               <InfoBox {...{mode, chartFormatter, infobox, updateInfobox, removeInfobox, intl}} /> 
            </div>
            );
          })
@@ -333,3 +335,5 @@ var Dashboard = React.createClass({
 
 //Dashboard = injectIntl(Dashboard);
 module.exports = Dashboard;
+//exports.Dashboard = Dashboard;
+//exports.ChartBox = ChartBox;

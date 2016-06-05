@@ -4,8 +4,10 @@ var { bindActionCreators } = require('redux');
 var { connect } = require('react-redux');
 
 
-var Notifications = require('../components/sections/Notifications');
+var { linkToHistory:link } = require('../actions/HistoryActions');
 
+var Notifications = require('../components/sections/Notifications');
+var DashboardActions = require('../actions/DashboardActions');
 var MessageActions = require('../actions/MessageActions');
 
 
@@ -27,10 +29,18 @@ function mapDispatchToProps(dispatch) {
 function mergeProps(stateProps, dispatchProps, ownProps) {
 
   let messages = [];
-  if (stateProps.activeTab === 'alerts') messages = stateProps.alerts;
-  else if (stateProps.activeTab === 'announcements') messages = stateProps.announcements;
-  else if (stateProps.activeTab === 'recommendations') messages = stateProps.recommendations;
-  else if (stateProps.activeTab === 'tips') messages = stateProps.tips;
+  if (stateProps.activeTab === 'alerts') {
+    messages = stateProps.alerts;
+  }
+  else if (stateProps.activeTab === 'announcements') {
+    messages = stateProps.announcements;
+  }
+  else if (stateProps.activeTab === 'recommendations') {
+    messages = stateProps.recommendations;
+  }
+  else if (stateProps.activeTab === 'tips') {
+    messages = stateProps.tips;
+  }
 
   const categories = [
     {id: 'alerts', title: 'notifications.alerts', unread: stateProps.alerts.reduce(((prev, curr) => ! curr.acknowledgedOn ? prev+1 : prev), 0)}, 
@@ -39,11 +49,12 @@ function mergeProps(stateProps, dispatchProps, ownProps) {
     {id: 'tips', title: 'notifications.tips', unread: stateProps.tips.reduce(((prev, curr) =>  !curr.acknowledgedOn ? prev+1 : prev), 0)}, 
   ];
 
+  
   const unread = categories.reduce(((prev, curr) => curr.unread+prev), 0); 
 
   const activeMessageIndex = stateProps.activeMessageId ? messages.findIndex(x => x.id === stateProps.activeMessageId) : null;
   const activeMessage = activeMessageIndex != null ? messages[activeMessageIndex] : null;
-  
+
   return Object.assign({}, ownProps,
                dispatchProps,
                stateProps,

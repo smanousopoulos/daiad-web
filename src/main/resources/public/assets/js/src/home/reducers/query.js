@@ -12,14 +12,14 @@ var query = function (state, action) {
    
   switch (action.type) {
     case types.QUERY_REQUEST_START:
-    case types.MESSAGE_REQUEST_START:
+    case types.MESSAGES_REQUEST_START:
     case types.MESSAGE_ACK_REQUEST_START:
       return Object.assign({}, state, {
         isLoading: true,
       });
 
     case types.QUERY_REQUEST_END:
-    case types.MESSAGE_REQUEST_END:
+    case types.MESSAGES_REQUEST_END:
     case types.MESSAGE_ACK_REQUEST_END:
       switch (action.success) {
         case true:
@@ -33,11 +33,16 @@ var query = function (state, action) {
           return Object.assign({}, state, {
             isLoading: false,
             success: false,
-            errors: action.errors
+            errors: action.errors && action.errors.length > 0 ? action.errors[0].code : 'Unknown error'
           });
         }
         break;
-      
+
+    case types.QUERY_DISMISS_ERROR:
+      return Object.assign({}, state, {
+        errors: null
+      });
+
     default:
       return state;
   }

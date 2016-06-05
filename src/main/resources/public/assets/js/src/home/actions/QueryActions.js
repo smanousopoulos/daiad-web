@@ -1,11 +1,12 @@
-require('es6-promise').polyfill();
-
 var types = require('../constants/ActionTypes');
-
 var deviceAPI = require('../api/device');
 var meterAPI = require('../api/meter');
 
-var { reduceSessions, getLastSession, getSessionIndexById, getDeviceTypeByKey, updateOrAppendToSession } = require('../utils/device');
+//var { linkToHistory:link } = require('./HistoryActions');
+
+
+var { reduceSessions, getLastSession, getSessionIndexById, getDeviceTypeByKey, updateOrAppendToSession, getDeviceKeysByType, lastNFilterToLength, transformInfoboxData } = require('../utils/device');
+var { getTimeByPeriod, getLastShowerTime, getPreviousPeriodSoFar } = require('../utils/time');
 
 const requestedQuery = function() {
   return {
@@ -56,7 +57,7 @@ const QueryActions = {
         if (!response.success) {
           throw new Error (response.errors);
         }
-          return response.devices;
+        return {data: response.devices};
         })
         .catch((error) => {
           dispatch(receivedQuery(false, error));
@@ -90,7 +91,9 @@ const QueryActions = {
   fetchLastDeviceSession: function(deviceKeys) {
     return function(dispatch, getState) {
       return dispatch(QueryActions.queryDeviceSessions(deviceKeys, {type: 'SLIDING', length: 1}))
-      .then(sessions => {
+      .then(res => {
+
+        const sessions = res.data;
         
         const reduced = reduceSessions(getState().user.profile.devices, sessions);        
         //find last
@@ -120,7 +123,7 @@ const QueryActions = {
           if (!response.success) {
             throw new Error (response.errors);
           }
-          return response.series;
+          return {data: response.series};
         })
         .catch((error) => {
           dispatch(receivedQuery(false, error));
@@ -150,8 +153,51 @@ const QueryActions = {
           throw error;
         });
     };
-  }
+  },
+  fetchInfoboxData: function(data) {
+    return function(dispatch, getState) {
+      const { id, type, deviceType, period } = data;
+      console.log('fething infobox data', data);
+      const device = getDeviceKeysByType(getState().user.profile.devices, deviceType);
+      
+      let time = data.time ? data.time : getTimeByPeriod(period);
+            
+      if (!device || !device.length) return new Promise.resolve(); 
 
+      const found = getState().section.dashboard.infobox.find(x => x.id === id);
+
+      /*
+      if (found && found.synced===true) {
+      //if (found && found.data && found.data.length>0){
+        console.log('found infobox data in memory');
+        return new Promise((resolve, reject) => resolve());
+        //}
+        }
+        */
+
+      if (type === "last") {
+        return dispatch(QueryActions.fetchLastDeviceSession(device))
+        
+        .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data, index: res.index, device: res.device, showerId: res.id, time: res.timestamp}), getState().user.profile.devices, x=> x, x => x));
+
+      }
+      else {
+        //fetch previous period data for comparison 
+        if (deviceType === 'METER') {
+          return dispatch(QueryActions.fetchMeterHistory(device, time))
+          
+          .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data}), getState().user.profile.devices, x=> x, x => x));
+        }
+        else {
+          return dispatch(QueryActions.queryDeviceSessions(device, {type: 'SLIDING', length:lastNFilterToLength(period)}))
+          
+          .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data}), getState().user.profile.devices, x=> x, x => x));
+
+        }
+      }
+    };
+  },
+  
 };
 
 module.exports = QueryActions;

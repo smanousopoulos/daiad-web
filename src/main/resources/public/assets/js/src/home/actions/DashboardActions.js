@@ -1,8 +1,9 @@
 var types = require('../constants/ActionTypes');
-require('es6-promise').polyfill();
 
+//var QueryActions = require('./QueryActions');
 var QueryActions = require('./QueryActions');
-var HistoryActions = require('./HistoryActions');
+//var HistoryActions = require('./HistoryActions');
+//console.log('qey', QueryActions);
 
 var { getDeviceKeysByType, lastNFilterToLength } = require('../utils/device');
 var { getTimeByPeriod, getLastShowerTime, getPreviousPeriodSoFar } = require('../utils/time');
@@ -66,7 +67,7 @@ const DashboardActions = {
 
       dispatch(DashboardActions.updateLayoutItem(id, update.display));
       
-      dispatch(DashboardActions.fetchInfoboxData(Object.assign({}, getState().section.dashboard.infobox.find(i=>i.id===id))));
+      dispatch(QueryActions.fetchInfoboxData(Object.assign({}, getState().section.dashboard.infobox.find(i=>i.id===id))));
     };
   },
   setInfoboxData: function(id, update) {
@@ -108,75 +109,36 @@ const DashboardActions = {
   removeInfobox: function(id) {
     return {
       type: types.DASHBOARD_REMOVE_INFOBOX,
-      id: id
+      id
     };
-  },
-  fetchInfoboxData: function(data) {
-    return function(dispatch, getState) {
-      const { id, type, subtype, deviceType, period } = data;
-      const device = getDeviceKeysByType(getState().user.profile.devices, deviceType);
-      let time = getTimeByPeriod(period);
-      
-      if (!device || !device.length) return new Promise((resolve, reject) => resolve()); 
-
-      const found = getState().section.dashboard.infobox.find(x => x.id === id);
-
-      if (found && found.synced===true) {
-      //if (found && found.data && found.data.length>0){
-        console.log('found infobox data in memory');
-        return new Promise((resolve, reject) => resolve());
-        //}
-      }
-
-      if (type === "last") {
-
-        return dispatch(QueryActions.fetchLastDeviceSession(device))
-        .then(response => 
-              dispatch(DashboardActions.setInfoboxData(id, {data: response.data, index: response.index, device: response.device, showerId: response.id, time: response.timestamp})))
-        .catch(error => { 
-          //log error in console for debugging and display friendly message
-          console.error('Caught error in infobox data fetch:', error); 
-          dispatch(DashboardActions.setInfoboxData(id, {data: [], error:'Oops, sth went wrong..replace with something friendly'})); });
-      }
-      //total or efficiency
-      else {
-
-        //fetch previous period data for comparison 
-        if (deviceType === 'METER') {
-          let prevTime = getPreviousPeriodSoFar(period);
-          dispatch(QueryActions.queryDeviceOrMeter(device, deviceType, prevTime))
-          .then(data => {
-              return dispatch(DashboardActions.setInfoboxData(id, {previous:data, time:prevTime}));})
-            .catch(error => { 
-              console.error('Caught error in infobox previous period data fetch:', error); 
-              dispatch(DashboardActions.setInfoboxData(id, {previous: [], error: 'Oops sth went wrong, replace with sth friendly'})); });
-               
-
-        return dispatch(QueryActions.fetchMeterHistory(device, time))
-        .then(data =>  
-          dispatch(DashboardActions.setInfoboxData(id, {data, time})))
-        .catch(error => { 
-          console.error('Caught error in infobox data fetch:', error); 
-          dispatch(DashboardActions.setInfoboxData(id, {data: [], error: 'Oops sth went wrong, replace with sth friendly'})); });
-        }
-        else {
-          return dispatch(QueryActions.queryDeviceSessions(device, {type: 'SLIDING', length:lastNFilterToLength(period)}))
-          .then(data =>  
-            dispatch(DashboardActions.setInfoboxData(id, {data})))
-          .catch(error => { 
-            console.error('Caught error in infobox data fetch:', error); 
-            dispatch(DashboardActions.setInfoboxData(id, {data: [], error: 'Oops sth went wrong, replace with sth friendly'})); });
-        }
-      }
-    };
-  },
+  }, 
   fetchAllInfoboxesData: function() {
     return function(dispatch, getState) {
       getState().section.dashboard.infobox.map(function (infobox) {
-        const { type } = infobox;
-        if (type === 'total' || type === 'last' || type === 'efficiency' || type === 'comparison' || type === 'breakdown')
-        return dispatch(DashboardActions.fetchInfoboxData(infobox));
+        const { id, type, deviceType, time, period } = infobox;
+        
+        if (type === 'total' || type === 'last' || type === 'efficiency' || type === 'comparison' || type === 'breakdown') {
+
+           console.log('query actions', QueryActions, QueryActions.fetchInfoboxData);
+          return dispatch(QueryActions.fetchInfoboxData(infobox))
+            .then(res =>  {
+
+              //fetch previous period data
+              if (deviceType === 'METER') {
+                const prevTime = getPreviousPeriodSoFar(period);
+                dispatch(QueryActions.fetchInfoboxData(Object.assign({}, infobox, {time: prevTime})))
+                .then(res => dispatch(DashboardActions.setInfoboxData(id, {previous: res.data, time: prevTime})));
+              }
+
+              dispatch(DashboardActions.setInfoboxData(id, {data: res.data, index: res.index, device: res.device, showerId: res.id, time: time ? time : res.timestamp}));
+            })
+            .catch(error => { 
+              //log error in console for debugging and display friendly message
+              console.error('Caught error in infobox data fetch:', error); 
+              dispatch(DashboardActions.setInfoboxData(id, {data: [], error:'Oops, sth went wrong..replace with something friendly'})); });
+        }
       });
+    
     };
   },
   updateLayout: function(layout) {

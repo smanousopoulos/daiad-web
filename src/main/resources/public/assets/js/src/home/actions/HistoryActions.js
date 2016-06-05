@@ -1,5 +1,4 @@
 var types = require('../constants/ActionTypes');
-require('es6-promise').polyfill();
 var { push } = require('react-router-redux');
 var { getSessionById, getDeviceKeysByType, getDeviceTypeByKey, lastNFilterToLength, getIdRangeByIndex } = require('../utils/device');
 var { getPreviousPeriod, convertGranularityToPeriod, getGranularityByDiff } = require('../utils/time');
@@ -128,7 +127,7 @@ const HistoryActions = {
         }
 
         dispatch(QueryActions.queryDeviceSessions(getState().section.history.activeDevice, {type: 'SLIDING', length: lastNFilterToLength(getState().section.history.timeFilter)}))
-          .then(sessions => dispatch(setSessions(sessions)))
+          .then(res => dispatch(setSessions(res.data)))
           .then(() => dispatch(setDataSynced()))
           .catch(error => { 
             console.error('Caught error in history device query:', error); 
@@ -138,7 +137,7 @@ const HistoryActions = {
       }
       else if (getState().section.history.activeDeviceType === 'METER') {
         dispatch(QueryActions.fetchMeterHistory(getState().section.history.activeDevice, getState().section.history.time))
-          .then(sessions => dispatch(setSessions(sessions)))
+          .then(res => dispatch(setSessions(res.data)))
           .then(() => dispatch(setDataSynced()))
           .catch(error => { 
             console.error('Caught error in history meter query:', error); 
@@ -150,7 +149,7 @@ const HistoryActions = {
 
         if (getState().section.history.comparison === 'last') {
           dispatch(QueryActions.queryDeviceOrMeter(getState().section.history.activeDevice, getState().section.history.activeDeviceType, getPreviousPeriod(convertGranularityToPeriod(getState().section.history.time.granularity), getState().section.history.time.startDate)))
-          .then(sessions => dispatch(setComparisonSessions(sessions)))
+          .then(res => dispatch(setComparisonSessions(res.data)))
           .catch(error => { 
             dispatch(setComparisonSessions([]));
             console.error('Caught error in history comparison query:', error); 
