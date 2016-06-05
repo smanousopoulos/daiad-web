@@ -197,7 +197,12 @@ const QueryActions = {
       }
     };
   },
-  
+  dismissError: function() {
+    return {
+      type: types.QUERY_DISMISS_ERROR
+    };
+  }
+ 
 };
 
 module.exports = QueryActions;
