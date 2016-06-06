@@ -7,6 +7,7 @@ var QueryActions = require('./QueryActions');
 var { getDeviceKeysByType } = require('../utils/device');
 var { lastNFilterToLength } = require('../utils/general');
 var { getTimeByPeriod, getLastShowerTime, getPreviousPeriodSoFar } = require('../utils/time');
+var { transformInfoboxData } = require('../utils/transformations');
 
 const setLastSession = function(session) {
   return {
@@ -123,10 +124,9 @@ const DashboardActions = {
   fetchAllInfoboxesData: function() {
     return function(dispatch, getState) {
       getState().section.dashboard.infobox.map(function (infobox) {
-        const { id, type, deviceType, time, period } = infobox;
+        const { id, type, deviceType, time, period, data } = infobox;
         
         if (type === 'total' || type === 'last' || type === 'efficiency' || type === 'comparison' || type === 'breakdown') {
-
           return dispatch(QueryActions.fetchInfoboxData(infobox))
             .then(res =>  {
 
@@ -143,6 +143,9 @@ const DashboardActions = {
               //log error in console for debugging and display friendly message
               console.error('Caught error in infobox data fetch:', error); 
               dispatch(DashboardActions.setInfoboxData(id, {data: [], error:'Oops, sth went wrong..replace with something friendly'})); });
+        }
+        else if (type === 'forecast' || type === 'budget') {
+          dispatch(DashboardActions.setInfoboxData(id, transformInfoboxData(Object.assign({}, infobox), getState().user.profile.devices)));
         }
       });
     
