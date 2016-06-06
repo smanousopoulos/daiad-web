@@ -3,9 +3,9 @@ var types = require('../constants/ActionTypes');
 //var QueryActions = require('./QueryActions');
 var QueryActions = require('./QueryActions');
 //var HistoryActions = require('./HistoryActions');
-//console.log('qey', QueryActions);
 
-var { getDeviceKeysByType, lastNFilterToLength } = require('../utils/device');
+var { getDeviceKeysByType } = require('../utils/device');
+var { lastNFilterToLength } = require('../utils/general');
 var { getTimeByPeriod, getLastShowerTime, getPreviousPeriodSoFar } = require('../utils/time');
 
 const setLastSession = function(session) {
@@ -67,7 +67,15 @@ const DashboardActions = {
 
       dispatch(DashboardActions.updateLayoutItem(id, update.display));
       
-      dispatch(QueryActions.fetchInfoboxData(Object.assign({}, getState().section.dashboard.infobox.find(i=>i.id===id))));
+      dispatch(QueryActions.fetchInfoboxData(Object.assign({}, getState().section.dashboard.infobox.find(i=>i.id===id))))
+      .then(res => {
+        dispatch(DashboardActions.setInfoboxData(id, res));
+      })
+      .catch(error => { 
+              //log error in console for debugging and display friendly message
+              console.error('Caught error in infobox data fetch:', error); 
+              dispatch(DashboardActions.setInfoboxData(id, {data: [], error:'Oops, sth went wrong..replace with something friendly'})); });
+
     };
   },
   setInfoboxData: function(id, update) {
@@ -119,7 +127,6 @@ const DashboardActions = {
         
         if (type === 'total' || type === 'last' || type === 'efficiency' || type === 'comparison' || type === 'breakdown') {
 
-           console.log('query actions', QueryActions, QueryActions.fetchInfoboxData);
           return dispatch(QueryActions.fetchInfoboxData(infobox))
             .then(res =>  {
 
@@ -127,10 +134,10 @@ const DashboardActions = {
               if (deviceType === 'METER') {
                 const prevTime = getPreviousPeriodSoFar(period);
                 dispatch(QueryActions.fetchInfoboxData(Object.assign({}, infobox, {time: prevTime})))
-                .then(res => dispatch(DashboardActions.setInfoboxData(id, {previous: res.data, time: prevTime})));
+                .then(res => dispatch(DashboardActions.setInfoboxData(id, {previous: res.data, prevTime: prevTime})));
               }
 
-              dispatch(DashboardActions.setInfoboxData(id, {data: res.data, index: res.index, device: res.device, showerId: res.id, time: time ? time : res.timestamp}));
+              dispatch(DashboardActions.setInfoboxData(id, res));
             })
             .catch(error => { 
               //log error in console for debugging and display friendly message

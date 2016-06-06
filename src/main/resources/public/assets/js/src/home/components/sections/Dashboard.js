@@ -11,7 +11,8 @@ var PureRenderMixin = require('react-addons-pure-render-mixin');
 
 var MainSection = require('../layout/MainSection');
 
-var Chart = require('../helpers/Chart');
+var ChartBox = require('../helpers/ChartBox');
+var StatBox = require('../helpers/StatBox');
 
 const { IMAGES } = require('../../constants/HomeConstants');
 
@@ -40,7 +41,6 @@ function SayHello (props) {
 function InfoBox (props) {
   const { mode, infobox, updateInfobox, removeInfobox, chartFormatter, intl } = props;
   let { id, error, period, type, display, linkToHistory, periods, displays, time } = infobox;
-  console.log('infobox', infobox, periods);
   if (!displays) displays = [];
   if (!periods) periods = [];
   
@@ -113,37 +113,6 @@ function InfoBox (props) {
   );
 }
 
-function StatBox (props) {
-  const { id, title, type, improved, data, highlight, metric, measurements, period, device, deviceDetails, index, time, better, comparePercentage, mu } = props.infobox;
-  let improvedDiv = <div/>;
-  if (improved === true) {
-    improvedDiv = (<img src={`${IMAGES}/success.svg`}/>);
-  }
-  else if (improved === false) {
-    improvedDiv = (<img src={`${IMAGES}/warning.svg`}/>);
-  }
-  const duration = data?(Array.isArray(data)?null:data.duration):null;
-  const arrowClass = better?"fa-arrow-down green":"fa-arrow-up red";
-  const bow = (better==null || comparePercentage == null) ? false : true;
-  return (
-    <div>
-      <div style={{float: 'left', width: '50%'}}>
-        <h2>{highlight}<span style={{fontSize:'0.5em', marginLeft:5}}>{mu}</span></h2>
-      </div>
-      <div style={{float: 'left', width: '50%'}}>
-        <div>
-          {
-            (() => bow ? 
-             <span><i className={`fa ${arrowClass}`}/>{better ? `${comparePercentage}% better than last ${period} so far!` : `${comparePercentage}% worse than last ${period} so far`}</span>
-             :
-               <span>No data</span>
-               )()
-          }
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function TipBox (props) {
   const { title, type, highlight } = props.infobox;
@@ -154,94 +123,8 @@ function TipBox (props) {
   );
 }
 
-function ChartBox (props) {
-  console.log('props chartbox', props);
-  const { intl, history, infobox } = props;
-  const { title, type, subtype, improved, data, metric, measurements, period, device, deviceDetails, chartData, chartFormatter, chartType, chartCategories, chartColors, chartXAxis, highlight, time, index, mu, invertAxis } = infobox;
-  if (!chartData) return <span/>;
-  return (
-    <div>
-      <div >
-        {
-          (() => chartData.length>0 ? 
-           (type === 'budget' ? 
-            <div>
-              <div 
-                style={{float: 'left', width: '50%'}}>
-              <Chart
-                height={70}
-                width='100%'
-                type='pie'
-                title={chartData[0].title}
-                subtitle=""
-                fontSize={17}
-                mu=''
-                colors={chartColors}
-                data={chartData}
-              /> 
-            </div>
-            <div style={{width: '50%', float: 'right', textAlign: 'center'}}>
-              <b>{chartData[0].data[0].value} lt</b> consumed<br/>
-              <b>{chartData[0].data[1].value} lt</b> remaining
-            </div>
-          </div>:
-              ((type === 'breakdown' || type === 'forecast' || type === 'comparison') ?
-                <Chart
-                  height={200}
-                  width='100%'  
-                  title=''
-                  type='bar'
-                  subtitle=""
-                  xMargin={0}
-                  y2Margin={0}  
-                  yMargin={0}
-                  x2Margin={0}
-                  fontSize={12}
-                  mu={mu}
-                  invertAxis={invertAxis}
-                  xAxis={chartXAxis}
-                  xAxisData={chartCategories}
-                  colors={chartColors}
-                  data={chartData}
-                /> :
-              <Chart
-                height={200}
-                width='100%'  
-                title=''
-                subtitle=""
-                type='line'
-                yMargin={10}
-                y2Margin={40}
-                fontSize={12}
-                mu={mu}
-                invertAxis={invertAxis}
-                xAxis={chartXAxis}
-                xAxisData={chartCategories}
-                colors={chartColors}
-                data={chartData}
-              />))
-
-            :
-            <span>Oops, no data available...</span>
-            )()
-        }
-        {
-          /*
-          (() => type === 'efficiency' ? 
-            <span>Your shower efficiency class this {period} was <b>{highlight}</b>!</span>
-           :
-             <span>You consumed a total of <b>{highlight}</b>!</span>
-             )()
-             */
-        }
-      </div>
-    </div>
-  );
-}
-
 function InfoPanel (props) {
   const { mode, layout, infoboxes, updateLayout, switchMode,  updateInfobox, removeInfobox, chartFormatter, intl, periods, displays } = props;
-
   return (
     <div>
       <ResponsiveGridLayout 

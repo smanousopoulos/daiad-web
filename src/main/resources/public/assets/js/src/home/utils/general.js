@@ -1,13 +1,13 @@
 //http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
-const validateEmail = function(email) {
+function validateEmail (email) {
      const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
-};
+}
 
 //flattens nested object
 // {a: {a1: '1', a2: '2'}, b: {b1: '1', b2: '2'}} -> 
 // {a.a1: '1', a.a2: '2', b.b1: '1', b.b2: '2'}
-const flattenMessages = function(nestedMessages, prefix) {
+function flattenMessages (nestedMessages, prefix) {
     return Object.keys(nestedMessages).reduce((messages, key) => {
         let value = nestedMessages[key];
         let prefixedKey = prefix ? `${prefix}.${key}` : key;
@@ -20,13 +20,13 @@ const flattenMessages = function(nestedMessages, prefix) {
 
         return messages;
     }, {});
-};
+}
 
-const addZero = function(input) {
+function addZero (input) {
   return input<10?`0${input}`:`${input}`;
-};
+}
 
-const getFriendlyDuration = function(seconds) {
+function getFriendlyDuration (seconds) {
   if (!seconds) { return null; }
   
   if (seconds>3600) {
@@ -41,9 +41,9 @@ const getFriendlyDuration = function(seconds) {
   else {
     return "00:" + addZero(seconds);
   }
-};
+}
 
-const getEnergyClass = function(energy) {
+function getEnergyClass (energy) {
   let scale;
   
   if (energy >= 3675) {
@@ -110,11 +110,29 @@ const getEnergyClass = function(energy) {
     scale = "A+";
   }
   return scale;
-};
+}
+
+function getMetricMu (metric) {
+  if (metric === 'showers') return '';
+  else if (metric === 'volume' || metric === 'difference') return 'lt';
+  else if (metric === 'energy') return 'W';
+  else if (metric === 'duration') return 'sec';
+  else if (metric === 'temperature') return '°C';
+}
+
+
+function lastNFilterToLength  (filter) {
+  if (filter === 'ten') return 10;
+  else if (filter === 'twenty') return 20;
+  else if (filter === 'fifty') return 50;
+  else throw new Error('unrecognized filter', filter);
+}
 
 module.exports = {
   validateEmail,
   flattenMessages,
   getFriendlyDuration,
-  getEnergyClass
+  getEnergyClass,
+  getMetricMu,
+  lastNFilterToLength
 };

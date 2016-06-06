@@ -2,23 +2,23 @@ const timeUtil = require('./time');
 
 //TODO: type label already present in messages
 //remove extra maps
-const combineMessages = function(categories) {
+function combineMessages (categories) {
   return categories.map(cat => 
                             cat.values.map(msg => Object.assign({}, msg, {category: cat.name})))
                        .reduce(((prev, curr) => prev.concat(curr)), [])
                        .sort((a, b) => b.createdOn - a.createdOn);
 
-};
+}
 
-const getTypeByCategory = function(category) {
+function getTypeByCategory (category) {
   if (category === 'alerts') return 'ALERT';
   else if (category === 'announcements') return 'ANNOUNCEMENT';
   else if (category === 'recommendations') return 'RECOMMENDATION_DYNAMIC';
   else if (category === 'tips') return 'RECOMMENDATION_STATIC';
   else { throw new Error('category not supported: ', category); }
-};
+}
 
-const getAlertMedia = function(message) {
+function getAlertMedia (message) {
   if (message.alert === 'WATER_LEAK') {
     return {
       type: 'forecast',
@@ -44,7 +44,7 @@ const getAlertMedia = function(message) {
   else {
     return null;
   }
-};
+}
 
 module.exports = {
   combineMessages,

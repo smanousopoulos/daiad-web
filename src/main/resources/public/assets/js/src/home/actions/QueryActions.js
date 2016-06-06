@@ -2,11 +2,14 @@ var types = require('../constants/ActionTypes');
 var deviceAPI = require('../api/device');
 var meterAPI = require('../api/meter');
 
-//var { linkToHistory:link } = require('./HistoryActions');
+var { linkToHistory:link } = require('./HistoryActions');
 
 
-var { reduceSessions, getLastSession, getSessionIndexById, getDeviceTypeByKey, updateOrAppendToSession, getDeviceKeysByType, lastNFilterToLength, transformInfoboxData } = require('../utils/device');
+var { getDeviceKeysByType } = require('../utils/device');
+var { reduceSessions, getLastSession, updateOrAppendToSession, transformInfoboxData } = require('../utils/transformations');
+var { lastNFilterToLength } = require('../utils/general');
 var { getTimeByPeriod, getLastShowerTime, getPreviousPeriodSoFar } = require('../utils/time');
+
 
 const requestedQuery = function() {
   return {
@@ -157,7 +160,6 @@ const QueryActions = {
   fetchInfoboxData: function(data) {
     return function(dispatch, getState) {
       const { id, type, deviceType, period } = data;
-      console.log('fething infobox data', data);
       const device = getDeviceKeysByType(getState().user.profile.devices, deviceType);
       
       let time = data.time ? data.time : getTimeByPeriod(period);
@@ -178,7 +180,8 @@ const QueryActions = {
       if (type === "last") {
         return dispatch(QueryActions.fetchLastDeviceSession(device))
         
-        .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data, index: res.index, device: res.device, showerId: res.id, time: res.timestamp}), getState().user.profile.devices, x=> x, x => x));
+        .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data, index: res.index, device: res.device, showerId: res.id, time: res.timestamp}), getState().user.profile.devices));
+
 
       }
       else {
@@ -186,12 +189,12 @@ const QueryActions = {
         if (deviceType === 'METER') {
           return dispatch(QueryActions.fetchMeterHistory(device, time))
           
-          .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data}), getState().user.profile.devices, x=> x, x => x));
+          .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data}), getState().user.profile.devices));
         }
         else {
           return dispatch(QueryActions.queryDeviceSessions(device, {type: 'SLIDING', length:lastNFilterToLength(period)}))
           
-          .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data}), getState().user.profile.devices, x=> x, x => x));
+          .then(res => transformInfoboxData(Object.assign({}, data, {data: res.data}), getState().user.profile.devices));
 
         }
       }

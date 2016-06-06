@@ -9,7 +9,9 @@ var HistoryActions = require('../actions/HistoryActions');
 
 var { selectTimeFormatter } = require('../utils/time');
 var { getChartTimeDataByFilter, getChartDataByFilter, getChartMeterCategories, getChartAmphiroCategories, getChartMetadata } = require('../utils/chart');
-var { getDeviceTypeByKey, getDeviceKeyByName, getDeviceNameByKey, getDataSessions, getMetricMu, getSessionsIdOffset } = require('../utils/device');
+var { getDeviceTypeByKey, getDeviceKeyByName, getDeviceNameByKey } = require('../utils/device');
+var { getMetricMu } = require('../utils/general');
+var { getDataSessions } = require('../utils/transformations');
 
 
 function mapStateToProps(state, ownProps) {
@@ -34,7 +36,7 @@ function mergeProps(stateProps, dispatchProps, ownProps) {
   
   const xAxisData = stateProps.activeDeviceType === 'METER' ? 
     (stateProps.timeFilter === 'custom' ? null : getChartMeterCategories(stateProps.timeFilter, ownProps.intl)) : 
-      getChartAmphiroCategories(stateProps.timeFilter, getSessionsIdOffset(stateProps.data[0] ? stateProps.data[0].sessions : []));
+      getChartAmphiroCategories(stateProps.timeFilter);
 
 
       const chartData = stateProps.data.map(devData => {

@@ -1,6 +1,7 @@
 var types = require('../constants/ActionTypes');
 var { push } = require('react-router-redux');
-var { getSessionById, getDeviceKeysByType, getDeviceTypeByKey, lastNFilterToLength, getIdRangeByIndex } = require('../utils/device');
+var { getSessionById, getDeviceKeysByType, getDeviceTypeByKey} = require('../utils/device');
+var { lastNFilterToLength } = require('../utils/general');
 var { getPreviousPeriod, convertGranularityToPeriod, getGranularityByDiff } = require('../utils/time');
 
 var QueryActions = require('./QueryActions');
