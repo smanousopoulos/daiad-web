@@ -1,0 +1,3 @@
+[submodule "src/main/resources/public/assets/js/src/home"]
+	path = src/main/resources/public/assets/js/src/home
+	url = https://github.com/smanousopoulos/daiad-client-home.git
